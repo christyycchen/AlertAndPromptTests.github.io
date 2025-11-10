@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+    window.addEventListener('message', function(event) {
+        if (event.data === 'triggerPrompt') {
+            const result = prompt('This is a prompt from the same-origin iframe!');
+            parent.postMessage({type: 'promptResult', value: result}, '*');
+        } else if (event.data === 'triggerAlert') {
+            alert('This is an alert from the same-origin iframe!');
+            parent.postMessage({type: 'alertResult', value: 'Alert was shown.'}, '*');
+        }
+    });
+</script>
+</head>
+<body>
+    <p>This is the iframe content.</p>
+</body>
+</html>
